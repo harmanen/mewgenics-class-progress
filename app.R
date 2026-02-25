@@ -1,50 +1,47 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
-#
-
 library(shiny)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("Mewgenics class progress tracker"),
 
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
-    )
+    # Show a plot of the generated distribution
+    mainPanel(tableOutput("achievements"))
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+    url <- "https://steamcommunity.com/id/hurmanen/stats/686060/achievements/"
+    
+    # Scrape achievement elements from the page and convert to text
+    achievements <- url |> 
+      rvest::read_html() |>
+      rvest::html_elements(".achieveRow") |>
+      rvest::html_text2()
+    
+    # Select unlocked achievements
+    unlocked_achievements <- achievements[grepl("Unlocked\\s\\d", achievements)]
+    
+    # Generate a data frame from the unlocked achievements.
+    data <- dplyr::bind_rows(
+      base::lapply(
+        unlocked_achievements,
+        function(achievement) {
+          # "House upgrade 1\nSend Frank 1 cat.\nUnlocked 10 Feb @ 11:19am\n"
+          splits <- base::strsplit(achievement, "\n") |> base::unlist()
+          
+          base::data.frame(
+            Name = splits[[1]],
+            Description = splits[[2]],
+            Date = splits[[3]]
+          )
+        }
+      )
+    )
+    
+    output$achievements <- renderTable(data)
 }
 
 # Run the application 

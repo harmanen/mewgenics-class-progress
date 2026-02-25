@@ -1,0 +1,3 @@
+# Mewgenics class progress visualizer
+
+Very much work in progress...

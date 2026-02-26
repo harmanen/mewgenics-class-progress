@@ -1,6 +1,6 @@
 library(shiny)
 
-# Define UI for application that draws a histogram
+# Define UI for application
 ui <- fluidPage(
 
     # Application title
@@ -13,7 +13,7 @@ ui <- fluidPage(
     )
 )
 
-# Define server logic required to draw a histogram
+# Define server logic
 server <- function(input, output) {
 
     url <- "https://steamcommunity.com/id/hurmanen/stats/686060/achievements/"
@@ -44,13 +44,15 @@ server <- function(input, output) {
       )
     )
     
+    output$achievements <- renderTable(data_achievements_all)
+    
     # Keep relevant achievements
     data_achievements_filtered <- data_achievements_all |> 
       dplyr::filter(
         stringr::str_detect(Description, "Complete the \\w+ with the \\w+")
       )
     
-    # Split Description to area and class columns
+    # Split Description to Area and Class columns
     descriptions <- data_achievements_filtered |> dplyr::pull(Description)
     
     data_achievements_filtered$Area = purrr::map_vec(
@@ -73,9 +75,7 @@ server <- function(input, output) {
       }
     )
     
-    output$achievements <- renderTable(data_achievements_all)
-    
-    # Extract date from unlock time
+    # Extract Date from unlock time
     data_achievements_filtered$Date = purrr::map_vec(
       data_achievements_filtered |> dplyr::pull(Time),
       function(time) {
@@ -94,7 +94,7 @@ server <- function(input, output) {
           .default = Date
         )
       ) |>
-      # Standardize
+      # Standardize timestamp
       dplyr::mutate(Date = lubridate::dmy(Date))
     
     # Pivot to sensible format

@@ -2,17 +2,29 @@ library(shiny)
 
 # Define UI for application
 ui <- fluidPage(
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+  ),
+  #
   titlePanel("Mewgenics class progress tracker"),
+  #
   sidebarLayout(
     sidebarPanel(
+      tags$div(
+        base::paste0(
+          "This app extracts information from user's Steam achievements page."
+        )
+      ),
+      tags$br(),
       textInput("steam_username", "Steam username"),
       submitButton("Submit"),
       width = 2
     ),
     mainPanel(
-      tableOutput("class_table"),
-      tableOutput("achievements"),
       uiOutput("no_data"),
+      tableOutput("class_table"),
+      tags$br(),
+      tableOutput("achievements"),
       width = 10
     )
   )
@@ -67,8 +79,6 @@ server <- function(input, output) {
         )
       )
 
-      output$achievements <- renderTable(data_achievements_all)
-
       # Keep relevant achievements
       data_achievements_filtered <- data_achievements_all |>
         dplyr::filter(
@@ -108,27 +118,50 @@ server <- function(input, output) {
         }
       )
 
-      data_achievements_filtered <- data_achievements_filtered |>
-        # Append current year for rows missing a year
-        dplyr::mutate(
-          Date = dplyr::case_when(
-            base::nchar(Date) == 6 ~
-              base::paste0(Date, ", ", base::Sys.time() |> base::strtrim(4)),
-            .default = Date
+      if (base::nrow(data_achievements_filtered) > 0) {
+        data_achievements_filtered <- data_achievements_filtered |>
+          # Append current year for rows missing a year
+          dplyr::mutate(
+            Date = dplyr::case_when(
+              base::nchar(Date) == 6 ~
+                base::paste0(Date, ", ", base::Sys.time() |> base::strtrim(4)),
+              .default = Date
+            )
+          ) |>
+          # Standardize timestamp
+          dplyr::mutate(Date = lubridate::dmy(Date))
+
+        # Pivot to sensible format
+        data_class_table <- data_achievements_filtered |>
+          dplyr::select(Area, Class, Date) |>
+          # Dates are rendered as unix time for some reason... Convert
+          dplyr::mutate(Date = base::as.character(Date)) |>
+          tidyr::pivot_wider(names_from = Class, values_from = Date)
+
+        output$class_table <- renderTable(
+          data_class_table,
+          caption = "Dates for areas finished per class",
+          caption.placement = "top"
+        )
+
+        output$achievements <- renderTable(
+          data_achievements_all,
+          caption = "All unlocked achievements",
+          caption.placement = "top"
+        )
+
+        output$no_data <- NULL
+      } else {
+        output$no_data <- renderUI(
+          base::paste0(
+            "Seems like user ", isolate(input$steam_username), " has yet to",
+            " earn any class progression achievements"
           )
-        ) |>
-        # Standardize timestamp
-        dplyr::mutate(Date = lubridate::dmy(Date))
+        )
 
-      # Pivot to sensible format
-      data_class_table <- data_achievements_filtered |>
-        dplyr::select(Area, Class, Date) |>
-        # Dates are rendered as unix time for some reason... Convert
-        dplyr::mutate(Date = base::as.character(Date)) |>
-        tidyr::pivot_wider(names_from = Class, values_from = Date)
-
-      output$class_table <- renderTable(data_class_table)
-      output$no_data <- NULL
+        output$achievements <- NULL
+        output$class_table <- NULL
+      }
     } else {
       # No achievements
       output$achievements <- NULL

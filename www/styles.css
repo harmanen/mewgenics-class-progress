@@ -1,0 +1,9 @@
+div[role=main] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+table > caption {
+  font-size: 2rem;
+}

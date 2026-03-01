@@ -1,12 +1,27 @@
 library(shiny)
+library(shinyjs)
 
 # A bit dangerous but cannot be bothered with Shiny
 # nolint start object_usage_linter
 
 # Define UI for application
 ui <- fluidPage(
+  useShinyjs(),
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
+  ),
+  # Trigger submit button when enter is used in username input field
+  tags$script(
+    HTML(
+      "
+      $(document).on('keydown', '#steam_username', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          $('#submit_button').click();
+        }
+      })
+      "
+    )
   ),
   #
   titlePanel("Mewgenics class progress tracker"),

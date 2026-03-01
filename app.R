@@ -74,7 +74,8 @@ server <- function(input, output) {
       )
     })
 
-    if (base::length(achievements()) > 0) {
+    # NA\n is returned if there are no achievements
+    if (achievements()[1] != "NA\n") {
       # Generate a data frame from the unlocked achievements.
       data_achievements_all(
         dplyr::bind_rows(

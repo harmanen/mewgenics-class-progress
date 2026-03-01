@@ -1,5 +1,7 @@
 # Mewgenics class progress visualizer
 
+https://bit.ly/mewgenics-class-progression
+
 Tracks the beating dates for each class and area (final 3rd stage) based on the user's Steam achievements. Dynamically generates tables from the data available so the amount of classes and areas is not spoiled!
 
 What is show is the combination of

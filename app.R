@@ -20,7 +20,7 @@ ui <- fluidPage(
       ),
       tags$br(),
       textInput("steam_username", "Steam username"),
-      submitButton("Submit"),
+      actionButton("submit_button", "Submit"),
       width = 2
     ),
     mainPanel(
@@ -38,7 +38,6 @@ server <- function(input, output) {
   # Initialize reactive values
   url <- reactiveVal("")
   achievements <- reactiveVal(c())
-  unlocked_achievements <- reactiveVal(c())
   data_achievements_all <- reactiveVal(data.frame())
   data_achievements_filtered <- reactiveVal(data.frame())
   descriptions <- reactiveVal(c())
@@ -46,34 +45,41 @@ server <- function(input, output) {
 
   # Update url, fetch achievements, and render outputs when submit button is
   # pressed
-  observeEvent(input$steam_username, {
-    url(base::paste0(
-      "https://steamcommunity.com/id/",
-      isolate(input$steam_username),
-      "/stats/686060/achievements/"
-    ))
-
-    # Scrape achievement elements from the page and convert to text
-    achievements(
-      url() |>
-        rvest::read_html() |>
-        rvest::html_elements(".achieveRow") |>
-        rvest::html_text2()
+  observeEvent(input$submit_button, {
+    url(
+      base::paste0(
+        "https://steamcommunity.com/id/",
+        isolate(input$steam_username),
+        "/stats/686060/achievements/"
+      )
     )
 
-    if (base::length(achievements()) > 0) {
-      # Select unlocked achievements
-      unlocked_achievements(
-        achievements()[
-          grepl("Unlocked\\s\\d", achievements())
-        ]
-      )
+    # Scrape achievement elements from the page and convert to text
+    achievements({
+      achievement_list <- url() |>
+        rvest::read_html() |>
+        rvest::html_elements(".achieveTxt") |>
+        rvest::html_text2()
 
+      unlock_times <- url() |>
+        rvest::read_html() |>
+        rvest::html_elements(".achieveUnlockTime") |>
+        rvest::html_text2()
+
+      # Select unlocked achievements and create combination vector
+      base::paste0(
+        achievement_list[1:base::length(unlock_times)],
+        "\n", # Separator used for splitting later
+        unlock_times
+      )
+    })
+
+    if (base::length(achievements()) > 0) {
       # Generate a data frame from the unlocked achievements.
       data_achievements_all(
         dplyr::bind_rows(
           base::lapply(
-            unlocked_achievements(),
+            achievements(),
             function(achievement) {
               # "House upgrade 1\nSend Frank 1 cat.\nUnlocked 10 Feb @ 11:19am\n"
               splits <- base::strsplit(achievement, "\n") |> base::unlist()
@@ -200,7 +206,8 @@ server <- function(input, output) {
             tags$ul(
               tags$li("Username is correct? Use numeric id?"),
               tags$li("User has achievements for Mewgenics?"),
-              tags$li("User has allowed public viewing of achievements?")
+              tags$li("User has allowed public viewing of achievements?"),
+              tags$li("Achievements are returned in English?")
             ),
             base::paste0(
               "(TBD figure out if active Steam login in the browser could be",

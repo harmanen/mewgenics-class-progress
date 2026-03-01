@@ -145,20 +145,17 @@ server <- function(input, output) {
             dplyr::mutate(
               Date = dplyr::case_when(
                 base::nchar(Date) == 6 ~
+                  # Older achievements are in e.g. 1 Feb, 2024
                   base::paste0(Date, ", ", base::Sys.time() |> base::strtrim(4)),
                 .default = Date
               )
-            ) |>
-            # Standardize timestamp
-            dplyr::mutate(Date = lubridate::dmy(Date))
+            )
         )
 
         # Pivot to sensible format
         data_class_table(
           data_achievements_filtered() |>
             dplyr::select(Area, Class, Date) |>
-            # Dates are rendered as unix time for some reason... Convert
-            dplyr::mutate(Date = base::as.character(Date)) |>
             tidyr::pivot_wider(names_from = Class, values_from = Date)
         )
 

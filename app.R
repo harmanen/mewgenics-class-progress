@@ -1,5 +1,8 @@
 library(shiny)
 
+# A bit dangerous but cannot be bothered with Shiny
+# nolint start object_usage_linter
+
 # Define UI for application
 ui <- fluidPage(
   tags$head(
@@ -198,3 +201,5 @@ server <- function(input, output) {
 
 # Run the application
 shinyApp(ui = ui, server = server)
+
+# nolint end

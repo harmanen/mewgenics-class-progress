@@ -36,6 +36,13 @@ ui <- fluidPage(
       tags$br(),
       textInput("steam_username", "Steam username"),
       actionButton("submit_button", "Submit"),
+      tags$div(
+        tags$a(
+          href = "https://github.com/harmanen/mewgenics-class-progress",
+          "GitHub"
+        ),
+        class = "github-container"
+      ),
       width = 2
     ),
     mainPanel(

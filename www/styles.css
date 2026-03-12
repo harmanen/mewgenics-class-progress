@@ -7,3 +7,9 @@ div[role=main] {
 table > caption {
   font-size: 2rem;
 }
+
+.github-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}

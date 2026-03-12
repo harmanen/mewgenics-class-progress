@@ -167,7 +167,7 @@ server <- function(input, output) {
             # Append current year for rows missing a year
             dplyr::mutate(
               Date = dplyr::case_when(
-                base::nchar(Date) == 6 ~
+                base::nchar(Date) <= 6 ~
                   # Older achievements are in e.g. 1 Feb, 2024
                   base::paste0(Date, ", ", base::Sys.time() |> base::strtrim(4)),
                 .default = Date
